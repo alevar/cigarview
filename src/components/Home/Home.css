@@ -1,0 +1,28 @@
+.splicemap-plot {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 20px;
+    background-color: #f9f9f9;
+    gap: 20px;
+}
+
+.visualization-container {
+    flex-grow: 1;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    max-width: calc(100% - 350px); /* Assuming the settings panel is about 350px */
+}
+
+/* Ensure the plot doesn't exceed its container */
+.visualization-container > div {
+    width: 100%;
+    max-width: 100%;
+}
