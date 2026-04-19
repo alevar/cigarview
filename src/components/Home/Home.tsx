@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import CigarPlot from "../CigarPlot/CigarPlot";
+import { defaultSequence, defaultCigars } from "../../utils/mockData";
 import "./Home.css";
 
 const Home: React.FC = () => {
-    const [sequence, setSequence] = useState<string>("ACGTACGTACGT");
-    const [cigars, setCigars] = useState<string[]>(["1H2S3=1X1I3M2D2M1N2H", "12M"]);
+    const [sequence, setSequence] = useState<string>(defaultSequence);
+    const [cigars, setCigars] = useState<string[]>(defaultCigars);
 
     const handleCigarChange = (index: number, value: string) => {
         const newCigars = [...cigars];
