@@ -1,12 +1,49 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import CigarPlot from "../CigarPlot/CigarPlot";
 import { defaultSequence, defaultCigars } from "../../utils/mockData";
 import "./Home.css";
 
+const serializeCigars = (cigars: {value: string, flag: string}[]) => {
+    return cigars.map(c => `${encodeURIComponent(c.value)}:${encodeURIComponent(c.flag)}`).join(',');
+};
+
+const parseCigars = (str: string) => {
+    return str.split(',').map(s => {
+        const parts = s.split(':');
+        return { 
+            value: parts[0] ? decodeURIComponent(parts[0]) : '', 
+            flag: parts.slice(1).join(':') ? decodeURIComponent(parts.slice(1).join(':')) : '' 
+        };
+    });
+};
+
 const Home: React.FC = () => {
-    const [sequence, setSequence] = useState<string>(defaultSequence);
-    const [cigars, setCigars] = useState<{ value: string, flag: string }[]>(defaultCigars);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const seqParam = searchParams.get("seq");
+    const initSequence = seqParam !== null ? seqParam : defaultSequence;
+
+    const cigarsParam = searchParams.get("cigars");
+    const initCigars = cigarsParam ? parseCigars(cigarsParam) : defaultCigars;
+
+    const [sequence, setSequence] = useState<string>(initSequence);
+    const [cigars, setCigars] = useState<{ value: string, flag: string }[]>(initCigars);
+
+    useEffect(() => {
+        const newParams = new URLSearchParams();
+        if (sequence) {
+            newParams.set("seq", sequence);
+        }
+        
+        const serializedCigars = serializeCigars(cigars);
+        if (serializedCigars) {
+            newParams.set("cigars", serializedCigars);
+        }
+
+        setSearchParams(newParams, { replace: true });
+    }, [sequence, cigars, setSearchParams]);
 
     const handleCigarChange = (index: number, value: string) => {
         const newCigars = [...cigars];
