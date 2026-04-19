@@ -6,16 +6,22 @@ import "./Home.css";
 
 const Home: React.FC = () => {
     const [sequence, setSequence] = useState<string>(defaultSequence);
-    const [cigars, setCigars] = useState<string[]>(defaultCigars);
+    const [cigars, setCigars] = useState<{ value: string, flag: string }[]>(defaultCigars);
 
     const handleCigarChange = (index: number, value: string) => {
         const newCigars = [...cigars];
-        newCigars[index] = value;
+        newCigars[index] = { ...newCigars[index], value };
+        setCigars(newCigars);
+    };
+
+    const handleFlagChange = (index: number, flag: string) => {
+        const newCigars = [...cigars];
+        newCigars[index] = { ...newCigars[index], flag };
         setCigars(newCigars);
     };
 
     const addCigar = () => {
-        setCigars([...cigars, ""]);
+        setCigars([...cigars, { value: "", flag: "" }]);
     };
 
     const removeCigar = (index: number) => {
@@ -44,13 +50,20 @@ const Home: React.FC = () => {
                             </Form.Group>
 
                             <h6 className="fw-bold">CIGAR Strings</h6>
-                            {cigars.map((cigar, index) => (
+                            {cigars.map((cigarObj, index) => (
                                 <Form.Group key={index} className="mb-2 d-flex">
                                     <Form.Control
                                         type="text"
-                                        value={cigar}
+                                        value={cigarObj.value}
                                         onChange={(e) => handleCigarChange(index, e.target.value.toUpperCase())}
                                         placeholder="e.g. 10M2I5M"
+                                    />
+                                    <Form.Control
+                                        type="text"
+                                        value={cigarObj.flag}
+                                        onChange={(e) => handleFlagChange(index, e.target.value)}
+                                        placeholder="Flag (e.g. 16)"
+                                        style={{ width: '120px', marginLeft: '10px' }}
                                     />
                                     <Button 
                                         variant="outline-danger" 
@@ -113,7 +126,7 @@ const Home: React.FC = () => {
                         <Card.Header as="h5">Visualization</Card.Header>
                         <Card.Body>
                             {sequence ? (
-                                <CigarPlot sequence={sequence} cigars={cigars.filter(c => c.trim() !== "")} />
+                                <CigarPlot sequence={sequence} cigars={cigars.filter(c => c.value.trim() !== "")} />
                             ) : (
                                 <div className="text-center p-5 text-muted">
                                     Please enter a valid sequence to visualize.

@@ -47,3 +47,13 @@ export function parseCigarToBlocks(cigar: string): CigarBlock[] {
 
   return blocks;
 }
+
+export function reverseCigar(cigar: string): string {
+    const regex = /(\d+)([MISDN=XHP])/g;
+    let match;
+    const ops = [];
+    while ((match = regex.exec(cigar)) !== null) {
+        ops.push(match[0]);
+    }
+    return ops.reverse().join('');
+}

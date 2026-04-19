@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { parseCigarToBlocks } from '../../utils/cigarParser';
+import { parseCigarToBlocks, reverseCigar } from '../../utils/cigarParser';
 import { Button } from 'react-bootstrap';
 
 export interface CigarPlotProps {
     sequence: string;
-    cigars: string[];
+    cigars: { value: string; flag: string }[];
     width?: number;
 }
 
@@ -40,7 +40,8 @@ const CigarPlot: React.FC<CigarPlotProps> = ({ sequence, cigars, width = 1000 })
         const maxReadLength = Math.max(
             sequence.length,
             ...cigars.map(c => {
-                const blocks = parseCigarToBlocks(c);
+                const isReversed = c.flag && (parseInt(c.flag) & 16);
+                const blocks = parseCigarToBlocks(isReversed ? reverseCigar(c.value) : c.value);
                 return blocks.length > 0 ? blocks[blocks.length - 1].readEnd : 0;
             })
         );
@@ -76,19 +77,21 @@ const CigarPlot: React.FC<CigarPlotProps> = ({ sequence, cigars, width = 1000 })
             .style('font-weight', 'bold')
             .text('Sequence');
 
-        cigars.forEach((_, index) => {
+        cigars.forEach((cigarObj, index) => {
+            const isReversed = cigarObj.flag && (parseInt(cigarObj.flag) & 16);
             labelsGroup.append('text')
             .attr('y', (index + 1) * (trackHeight + trackPadding) + trackHeight / 2)
             .attr('dy', '0.32em')
             .attr('text-anchor', 'end')
             .attr('font-size', '12px')
-            .text(`CIGAR ${index + 1}`);
+            .text(`${isReversed ? '← ' : ''}CIGAR ${index + 1}`);
         });
 
         // Data arrays
         const sequenceData = sequence.split('').map((base, i) => ({ base, i }));
-        const allCigarBlocks = cigars.map((cigar, index) => {
-            return { index, blocks: parseCigarToBlocks(cigar) };
+        const allCigarBlocks = cigars.map((cigarObj, index) => {
+            const isReversed = cigarObj.flag && (parseInt(cigarObj.flag) & 16);
+            return { index, blocks: parseCigarToBlocks(isReversed ? reverseCigar(cigarObj.value) : cigarObj.value) };
         });
 
         // The zoomed group (clipped)
