@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { parseCigarToBlocks, CigarBlock } from '../../utils/cigarParser';
+import { parseCigarToBlocks } from '../../utils/cigarParser';
 import { Button } from 'react-bootstrap';
 
 export interface CigarPlotProps {
@@ -76,7 +76,7 @@ const CigarPlot: React.FC<CigarPlotProps> = ({ sequence, cigars, width = 1000 })
             .style('font-weight', 'bold')
             .text('Sequence');
 
-        cigars.forEach((cigar, index) => {
+        cigars.forEach((_, index) => {
             labelsGroup.append('text')
             .attr('y', (index + 1) * (trackHeight + trackPadding) + trackHeight / 2)
             .attr('dy', '0.32em')
@@ -213,7 +213,7 @@ const CigarPlot: React.FC<CigarPlotProps> = ({ sequence, cigars, width = 1000 })
             cigarLines
                 .attr('x1', newXScale(0))
                 .attr('x2', function() {
-                    const ctx = d3.select(this.parentNode).datum() as any;
+                    const ctx = d3.select(this.parentNode as Element).datum() as any;
                     const rEnd = ctx.blocks.length > 0 ? ctx.blocks[ctx.blocks.length - 1].readEnd : 0;
                     return newXScale(rEnd);
                 });
@@ -264,9 +264,62 @@ const CigarPlot: React.FC<CigarPlotProps> = ({ sequence, cigars, width = 1000 })
         }
     };
 
+    const handleDownloadSVG = () => {
+        if (!svgRef.current) return;
+        const svgData = new XMLSerializer().serializeToString(svgRef.current);
+        const preface = '<?xml version="1.0" standalone="no"?>\r\n';
+        const svgBlob = new Blob([preface, svgData], {type: "image/svg+xml;charset=utf-8"});
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const downloadLink = document.createElement("a");
+        downloadLink.href = svgUrl;
+        downloadLink.download = "cigarplot.svg";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(svgUrl);
+    };
+
+    const handleDownloadPNG = () => {
+        if (!svgRef.current) return;
+        const svgData = new XMLSerializer().serializeToString(svgRef.current);
+        const canvas = document.createElement("canvas");
+        // For higher res, we can scale up
+        canvas.width = currentWidth;
+        canvas.height = totalHeight;
+        const context = canvas.getContext("2d");
+        const img = new Image();
+        const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+        const url = URL.createObjectURL(svgBlob);
+        
+        img.onload = function() {
+            if (context) {
+                // optionally fill white background
+                context.fillStyle = "#fafafa";
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(img, 0, 0);
+            }
+            URL.revokeObjectURL(url);
+            const imgURI = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = imgURI;
+            a.download = "cigarplot.png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        img.src = url;
+    };
+
     return (
         <div ref={containerRef} style={{ width: '100%', position: 'relative', overflowX: 'hidden' }}>
             <div style={{ position: 'absolute', top: 5, right: 10, display: 'flex', gap: '5px', zIndex: 10 }}>
+                <Button size="sm" variant="outline-primary" onClick={handleDownloadSVG} title="Download SVG">
+                    SVG 
+                </Button>
+                <Button size="sm" variant="outline-primary" onClick={handleDownloadPNG} title="Download PNG">
+                    PNG
+                </Button>
+                <div style={{ width: '10px' }}></div>
                 <Button size="sm" variant="outline-secondary" onClick={handleZoomIn} title="Zoom In">
                     <i className="bi bi-zoom-in"></i>
                 </Button>
